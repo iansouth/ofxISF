@@ -15,20 +15,31 @@ public:
 		ofSetVerticalSync(true);
 		ofBackground(0);
 		
-		video.initGrabber(1280, 720);
+		//video.initGrabber(1280, 720);
 		
 		isf.setup(1280, 720, GL_RGB32F);
-		isf.load("isf-test.fs");
+		//isf.load("isf-test.fs");
+		isf.load("isf-basic.fs");
+        cout << "Name: " << isf.getName() << endl;;
+        cout << "Description: " << isf.getDescription() << endl;;
+        cout << "Credit: " << isf.getCredit() << endl;;
+        isf.dumpShader();
+        cout << "Uniforms" << endl;
+        auto uniforms = isf.getInputs();
+        for (size_t i = 0; i < uniforms.size(); ++i) {
+            auto uni = uniforms.getUniform(i);
+            cout << "Uniform: " << uni->getName() << endl;
+        }
 		
-		isf.setImage("inputImage", video.getTextureReference());
+		//isf.setImage("inputImage", video.getTextureReference());
 	}
 	
 	void update()
 	{
-		video.update();
+		//video.update();
 		
 		float t = ofGetElapsedTimef() * 2;
-		isf.setParam<float>("blurAmount", ofNoise(1, 0, 0, t) * 1.5);
+		//isf.setUniform<float>("blurAmount", ofNoise(1, 0, 0, t) * 1.5);
 		
 		isf.update();
 	}
@@ -40,7 +51,7 @@ public:
 
 	void keyPressed(int key)
 	{
-		isf.load("isf-test.fs");
+		isf.load("isf-basic.fs");
 	}
 
 	void keyReleased(int key)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Poco/RegularExpression.h"
+//#include "Poco/RegularExpression.h"
 
 #include "Constants.h"
 #include "Uniforms.h"
@@ -203,6 +203,7 @@ protected:
 
 	bool process_lookup_macro(string& isf_source, map<string, ImageDecl> &image_decls)
 	{
+        /*
 		{
 			string pattern = "(IMG_THIS_PIXEL|IMG_THIS_NORM_PIXEL)\\s*\\(\\s*(.*?)\\s*\\)";
 
@@ -294,6 +295,7 @@ protected:
 				m.offset += replace_string.size();
 			}
 		}
+        */
 		
 		return true;
 	}

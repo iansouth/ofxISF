@@ -111,11 +111,12 @@ public:
 		return pass_map[name]->enabled;
 	}
 
-	bool toggle(size_t index) { passes[index]->enabled = !passes[index]->enabled; }
+	bool toggle(size_t index) { passes[index]->enabled = !passes[index]->enabled; return true; }
 	bool toggle(const string& name)
 	{
 		if (!hasShader(name)) return false;;
 		pass_map[name]->enabled != pass_map[name]->enabled;
+        return true;
 	}
 
 protected:
