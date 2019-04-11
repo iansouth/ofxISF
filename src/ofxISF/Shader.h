@@ -435,8 +435,8 @@ protected:
             for ( auto & pass : json["PASSES"] ) {
 				string target = pass["TARGET"];
 				// TODO: uniform expression
-				string width  = pass["WIDTH"];
-				string height = pass["HEIGHT"];
+				//string width  = pass["WIDTH"];
+				//string height = pass["HEIGHT"];
 
 				Pass o;
 				o.target = target;
