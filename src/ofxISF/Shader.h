@@ -3,8 +3,6 @@
 #include "Constants.h"
 #include "Uniforms.h"
 
-#include "jsonxx.h"
-
 OFX_ISF_BEGIN_NAMESPACE
 
 class Shader
@@ -386,191 +384,126 @@ protected:
 	
 	bool parse(const string& header_directive)
 	{
-		jsonxx::Object o;
-		assert(o.parse(header_directive));
-		
-		description = o.get<string>("DESCRIPTION", "");
-		credit = o.get<string>("CREDIT", "");
-		
-		jsonxx::Array a;
-		
-		{
+        ofLogNotice("HELLO") << "Parsing JSON:\n" << header_directive;
+        auto json = ofJson::parse(header_directive);
+        if ( ! json.is_object() ) {
+            ofLogError("ofxISF") << "Header is not a JSON object, can't parse!";
+            return false;
+        }
+
+		description = json["DESCRIPTION"];
+		credit = json["CREDIT"];
+
+        if (json.count("CATEGORIES") == 1 && json["CATEGORIES"].is_array()) {
 			categories.clear();
-			a = o.get<jsonxx::Array>("CATEGORIES", jsonxx::Array());
-			for (int i = 0; i < a.size(); i++)
-				if (a.has<string>(i))
-					categories.push_back(a.get<string>(i));
-		}
-		
-		{
-			default_image_input_name = "";
-			input_uniforms.clear();
-			
-			a = o.get<jsonxx::Array>("INPUTS", jsonxx::Array());
-			for (int i = 0; i < a.size(); i++)
-			{
-				jsonxx::Object o = a.get<jsonxx::Object>(i, jsonxx::Object());
-				string name = o.get<string>("NAME", "");
-				string type = o.get<string>("TYPE", "");
-				
-				Input input;
-				input.name = name;
-				input.type = type;
-				inputs.push_back(input);
-				
-				if (type == "image"
-					&& default_image_input_name == "")
-				{
-					default_image_input_name = name;
-				}
-				
-				Uniform::Ref uniform = setup_input_uniform(o);
-				if (uniform)
-				{
-					// uniform type changed
-					if (uniforms.hasUniform(name)
-						&& uniforms.getUniform(name)->getTypeID() != uniform->getTypeID())
-					{
-						uniforms.removeUniform(name);
-					}
-					
-					uniforms.addUniform(name, uniform);
-					input_uniforms.addUniform(name, uniform);
-				}
-			}
-		}
-		
-		{
-			presistent_buffers.clear();
-			
-			if (o.has<jsonxx::Array>("PERSISTENT_BUFFERS"))
-			{
-				a = o.get<jsonxx::Array>("PERSISTENT_BUFFERS", jsonxx::Array());
-				for (int i = 0; i < a.size(); i++)
-				{
-					string name = a.get<string>(i);
-					
-					PresistentBuffer buf;
-					buf.name = name;
-					buf.width = render_size.x;
-					buf.height = render_size.y;
-					presistent_buffers.push_back(buf);
-				}
-			}
-			else if (o.has<jsonxx::Object>("PERSISTENT_BUFFERS"))
-			{
-#if 0
-				jsonxx::Object obj = o.get<jsonxx::Object>("PERSISTENT_BUFFERS", jsonxx::Object());
-				const jsonxx::Object::container& kv_map = obj.kv_map();
-				
-				jsonxx::Object::container::const_iterator it = kv_map.begin();
-				while (it != kv_map.end())
-				{
-					string name = it->first;
-					PresistentBuffer buf;
-					buf.name = name;
-					
-					// TODO: uniform expression
-					buf.width = ...;
-					buf.height = ...;
-					
-					presistent_buffers.push_back(buf);
-					
-					it++;
-				}
-#endif
-				
-				throw "not implemented yet";
-			}
-		}
-		
-		{
-			passes.clear();
-			
-			a = o.get<jsonxx::Array>("PASSES", jsonxx::Array());
-			for (int i = 0; i < a.size(); i++)
-			{
-				jsonxx::Object pass = a.get<jsonxx::Object>(i);
-				
-				string target = pass.get<string>("TARGET", "");
-				
+            for (auto &el: json["CATEGORIES"]) categories.push_back(el);
+        }
+
+        input_uniforms.clear();
+        for (auto& el : json["INPUTS"]) {
+            Uniform::Ref uniform = setup_input_uniform(el);
+            if (uniform) {
+                string name = uniform->getName();
+                if (uniforms.hasUniform(name) && uniforms.getUniform(name)->getTypeID() != uniform->getTypeID()) {
+                    // uniform type changed
+                    uniforms.removeUniform(name);
+                }
+                uniforms.addUniform(name, uniform);
+                input_uniforms.addUniform(name, uniform);
+            }
+        }
+
+        presistent_buffers.clear();
+        if ( json.count("PERSISTENT_BUFFERS") == 1 ) {
+            if ( json["PERSISTENT_BUFFERS"].is_array() ) {
+                for ( auto & el : json["PERSISTENT_BUFFERS"] ) {
+                    string name = el;
+                    PresistentBuffer buf;
+                    buf.name = name;
+                    buf.width = render_size.x;
+                    buf.height = render_size.y;
+                    presistent_buffers.push_back(buf);
+                }
+            }
+            else if ( json["PERSISTENT_BUFFERS"].is_object() ) {
+                throw "not implemented yet";
+            }
+        }
+
+        passes.clear();
+		if ( json.count("PASSES") == 1 && json["PASSES"].is_array() ) {
+            for ( auto & pass : json["PASSES"] ) {
+				string target = pass["TARGET"];
 				// TODO: uniform expression
-				string width = pass.get<string>("WIDTH", "");
-				string height = pass.get<string>("HEIGHT", "");
-				
+				string width  = pass["WIDTH"];
+				string height = pass["HEIGHT"];
+
 				Pass o;
 				o.target = target;
-				
 				passes.push_back(o);
 			}
 		}
-		
+
 		return true;
 	}
-	
-	Uniform::Ref setup_input_uniform(const jsonxx::Object& obj)
-	{
-		string name = obj.get<string>("NAME", "");
-		string type = obj.get<string>("TYPE", "");
-		
+
+	Uniform::Ref setup_input_uniform(const ofJson& json)
+    {
 		Uniform::Ref uniform = NULL;
-		
-		if (type == "image")
-		{
+
+        string name = json["NAME"];
+        string type = json["TYPE"];
+        bool hasDefault = json.count("DEFAULT") == 1;
+
+		if (type == "image") {
+            if (default_image_input_name == "") default_image_input_name = name;
 			uniform = new ImageUniform(name);
 		}
-		else if (type == "bool")
-		{
-			uniform = new BoolUniform(name, obj.get<bool>("DEFAULT", false));
+		else if (type == "bool") {
+            bool def = false;
+            if (hasDefault) def = json["DEFAULT"];
+			uniform = new BoolUniform(name, def);
 		}
-		else if (type == "float")
-		{
-			FloatUniform *o = new FloatUniform(name, obj.get<jsonxx::Number>("DEFAULT", 0));
-			
-			if (obj.has<jsonxx::Number>("MIN") && obj.has<jsonxx::Number>("MAX"))
-			{
-				float m0 = obj.get<jsonxx::Number>("MIN", std::numeric_limits<float>::min());
-				float m1 = obj.get<jsonxx::Number>("MAX", std::numeric_limits<float>::max());
+		else if (type == "float") {
+            float def = 0.0f;
+            if (hasDefault) def = json["DEFAULT"];
+			FloatUniform *o = new FloatUniform(name, def);
+			if (json.count("MIN") == 1 && json.count("MAX") == 1) {
+				float m0 = json["MIN"];
+				float m1 = json["MAX"];
 				o->setRange(m0, m1);
 			}
-			
 			uniform = o;
 		}
 		else if (type == "color")
 		{
 			ofFloatColor def;
-			
-			jsonxx::Array a = obj.get<jsonxx::Array>("DEFAULT", jsonxx::Array());
-			if (a.size() == 4)
-			{
-				def.r = a.get<jsonxx::Number>(0, 0);
-				def.g = a.get<jsonxx::Number>(1, 0);
-				def.b = a.get<jsonxx::Number>(2, 0);
-				def.a = a.get<jsonxx::Number>(3, 0);
-			}
-			
+            if ( hasDefault && json["DEFAULT"].is_array() ) {
+                if ( json["DEFAULT"].size() == 4 ) {
+                    def.r = json["DEFAULT"][0];
+                    def.r = json["DEFAULT"][1];
+                    def.r = json["DEFAULT"][2];
+                    def.r = json["DEFAULT"][3];
+                }
+            }
 			uniform = new ColorUniform(name, def);
 		}
-		else if (type == "event")
-		{
+		else if (type == "event") {
 			uniform = new EventUniform(name);
 		}
-		else if (type == "point2D")
-		{
+		else if (type == "point2D") {
 			ofVec2f def;
-			
-			jsonxx::Array a = obj.get<jsonxx::Array>("DEFAULT", jsonxx::Array());
-			if (a.size() == 2)
-			{
-				def.x = a.get<jsonxx::Number>(0, 0);
-				def.y = a.get<jsonxx::Number>(1, 0);
-			}
-			
+            if ( hasDefault && json["DEFAULT"].is_array() ) {
+                if ( json["DEFAULT"].size() == 2 ) {
+                    def.x = json["DEFAULT"][0];
+                    def.y = json["DEFAULT"][1];
+                }
+            }
 			uniform = new Point2DUniform(name, def);
 		}
-		
-		return uniform;
-	}
+
+        return uniform;
+    }
 };
 
 OFX_ISF_END_NAMESPACE

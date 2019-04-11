@@ -23,13 +23,18 @@ public:
         cout << "Name: " << isf.getName() << endl;;
         cout << "Description: " << isf.getDescription() << endl;;
         cout << "Credit: " << isf.getCredit() << endl;;
-        isf.dumpShader();
+        cout << "Categories: " << isf.getCategories().size() << endl;;
+        for (auto const & cat : isf.getCategories()) {
+            cout << "    " << cat << endl;
+        }
         cout << "Uniforms" << endl;
         auto uniforms = isf.getInputs();
         for (size_t i = 0; i < uniforms.size(); ++i) {
             auto uni = uniforms.getUniform(i);
-            cout << "Uniform: " << uni->getName() << endl;
+            cout << "Uniform: " << uni->getName() << " type:" << uni->getTypeID() << endl;
         }
+        cout << "SHADER" << endl;
+        isf.dumpShader();
 		
 		//isf.setImage("inputImage", video.getTextureReference());
 	}
@@ -39,7 +44,7 @@ public:
 		//video.update();
 		
 		float t = ofGetElapsedTimef() * 2;
-		//isf.setUniform<float>("blurAmount", ofNoise(1, 0, 0, t) * 1.5);
+		isf.setUniform<float>("blurAmount", ofNoise(1, 0, 0, t) * 1.5);
 		
 		isf.update();
 	}

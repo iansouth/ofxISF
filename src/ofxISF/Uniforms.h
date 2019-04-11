@@ -18,7 +18,7 @@ public:
 
 	typedef Ref_<Uniform> Ref;
 
-	Uniform(const string& name, unsigned int type_id) : name(name), type_id(type_id)
+	Uniform(const string& name, size_t type_id) : name(name), type_id(type_id)
 	{}
 	virtual ~Uniform() {}
 
@@ -27,7 +27,7 @@ public:
 	template <typename TT>
 	bool isTypeOf() const { return Type2Int<TT>::value() == type_id; }
 	
-	unsigned int getTypeID() const { return type_id; }
+	size_t getTypeID() const { return type_id; }
 
 protected:
 
@@ -35,7 +35,7 @@ protected:
 	friend class Shader;
 	
 	string name;
-	unsigned int type_id;
+	size_t type_id;
 
 	virtual string getUniform() const = 0;
 	virtual void update(ofShader *shader) = 0;
@@ -78,7 +78,7 @@ public:
 	bool addUniform(const string& key, Uniform::Ref uniform)
 	{
 		if (hasUniform(key)) return false;
-		
+
 		uniforms_map[key] = uniform;
 		updateCache();
 		return true;
