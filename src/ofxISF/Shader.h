@@ -167,11 +167,23 @@ public:
 	}
 	
     void dumpShader() const {
-		code_generator.dumpShader();
+        cout << "Name: " << getName() << endl;;
+        cout << "Description: " << getDescription() << endl;;
+        cout << "Credit: " << getCredit() << endl;;
+        cout << "Categories: " << getCategories().size() << endl;;
+        for (auto const & cat : getCategories())  cout << "    " << cat << endl;
+        cout << "Uniforms" << endl;
+        auto uniforms = getInputs();
+        for (size_t i = 0; i < uniforms.size(); ++i) {
+            auto uni = uniforms.getUniform(i);
+            cout << "Uniform: " << uni->getName() << " type:" << uni->getTypeID() << endl;
+        }
+        cout << "Params:" << endl;
+        cout << uniforms.getParams() << endl;
+
+        code_generator.dumpShader();
 	}
 
-	//
-	
 	const string& getName() const { return name; }
 	const string& getDescription() const { return description; }
 	const string& getCredit() const { return credit; }
@@ -466,14 +478,17 @@ protected:
 		}
 		else if (type == "point2D") {
 			ofVec2f def;
-            if ( hasDefault && json["DEFAULT"].is_array() ) {
-                if ( json["DEFAULT"].size() == 2 ) {
-                    def.x = json["DEFAULT"][0];
-                    def.y = json["DEFAULT"][1];
-                }
+            if ( hasDefault && json["DEFAULT"].is_array() && json["DEFAULT"].size() == 2 ) {
+                def = ofVec2f(json["DEFAULT"][0], json["DEFAULT"][1]);
             }
-			uniform = new Point2DUniform(name, def);
-		}
+            auto o = new Point2DUniform(name, def);
+            if (json.count("MIN") == 1 && json.count("MAX") == 1) {
+                ofVec2f min(json["MIN"][0], json["MIN"][0]);
+                ofVec2f max(json["MAX"][0], json["MAX"][0]);
+                o->setRange(min, max);
+            }
+            uniform = o;
+        }
 
         return uniform;
     }

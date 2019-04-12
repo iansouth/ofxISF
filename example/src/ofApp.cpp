@@ -15,10 +15,15 @@ public:
     ofxButton           guiLoadBtn;
     ofxGuiGroup         guiInputs;
 
+    ofTrueTypeFont font1;
+
     void setup() {
         ofSetFrameRate(60);
         ofSetVerticalSync(true);
         ofBackground(0);
+
+        font1.load("verdana.ttf", 16, true, true);
+        font1.setLineHeight(23.0f);
 
         video.initGrabber(1280, 720);
 
@@ -34,8 +39,9 @@ public:
         gui.add(guiName);
         gui.add( guiLoadBtn.setup("Load shader...") );
         gui.add(bGuiVisible);
-        guiLoadBtn.addListener(this, &ofApp::loadDialog);
         gui.add(guiInputs.setup("Inputs"));
+
+        guiLoadBtn.addListener(this, &ofApp::loadDialog);
     }
 
     void loadDialog() {
@@ -51,28 +57,12 @@ public:
 
         guiName = isf.getName();
         ofSetWindowTitle(isf.getName());
-        cout << "Name: " << isf.getName() << endl;;
-        cout << "Description: " << isf.getDescription() << endl;;
-        cout << "Credit: " << isf.getCredit() << endl;;
-        cout << "Categories: " << isf.getCategories().size() << endl;;
-        for (auto const & cat : isf.getCategories()) {
-            cout << "    " << cat << endl;
-        }
-        cout << "Uniforms" << endl;
         auto uniforms = isf.getInputs();
-        for (size_t i = 0; i < uniforms.size(); ++i) {
-            auto uni = uniforms.getUniform(i);
-            cout << "Uniform: " << uni->getName() << " type:" << uni->getTypeID() << endl;
-        }
-
-        cout << "Params :)" << endl;
-        cout << uniforms.getParams() << endl;
-
-        isf.setImage("inputImage", video.getTextureReference());
-
         auto params = uniforms.getParams();
         guiInputs.clear();
         guiInputs.add(params);
+
+        isf.setImage("inputImage", video.getTextureReference());
 
         return true;
     }
@@ -88,7 +78,23 @@ public:
 
     void draw() {
         isf.draw(0, 0);
-        if (bGuiVisible == true) gui.draw();
+        if (bGuiVisible == true) {
+            drawInfo();
+            gui.draw();
+        }
+    }
+
+    void drawInfo() {
+        string info("");
+        info += "Name: " + isf.getName() + "\n";
+        info += "Credit: " + isf.getCredit() + "\n";
+        info += "Description: " + isf.getDescription() + "\n";
+        info += "Categories:  ";
+        for (auto const & cat : isf.getCategories()) info += cat;
+        ofPushStyle();
+        ofSetColor(255, 255, 255, 200);
+        font1.drawString(info, 20, ofGetWindowHeight() - 100);
+        ofPopStyle();
     }
 
     void keyPressed(int key) {
