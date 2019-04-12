@@ -2,6 +2,7 @@
 
 #include "Constants.h"
 #include "Uniforms.h"
+#include "ofMain.h"
 
 OFX_ISF_BEGIN_NAMESPACE
 
@@ -16,44 +17,37 @@ public:
 		,internalformat(GL_RGB)
 	{}
 
-	void setup(int w, int h, int internalformat = GL_RGB)
-	{
+    void setup(int w, int h, int internalformat = GL_RGB) {
 		render_size.set(w, h);
 		this->internalformat = internalformat;
 		
 		ofFbo &fbo = framebuffer_map["DEFAULT"];
 		fbo.allocate(render_size.x, render_size.y, internalformat);
-		
 		fbo.begin();
 		ofClear(0);
 		fbo.end();
 	}
 
-	bool load(const string& path)
-	{
-		if (!ofFile::doesFileExist(path))
-		{
-			ofLogError("ofxISF") << "no such file";
+    bool load(const string& path) {
+        if (!ofFile::doesFileExist(path)) {
+            ofLogError("ofxISF") << "no such file: " << path;
 			return false;
 		}
+        ofLogNotice("ofxISF") << "Loading ISF shader file:" << path;
 		
 		name = ofFilePath::getBaseName(path);
-		
 		string data = ofBufferFromFile(path).getText();
 		if (!parse_directive(data, header_directive, shader_directive)) return false;
 		if (!reload_shader()) return false;
-
 		return true;
 	}
 
-	void update()
-	{
+    void update() {
 		const vector<Ref_<ImageUniform> >& images = uniforms.getImageUniforms();
 		bool need_reload_shader = false;
 		for (int i = 0; i < images.size(); i++)
 		{
-			if (images[i]->checkTextureFormatChanged())
-			{
+            if (images[i]->checkTextureFormatChanged()) {
 				need_reload_shader = true;
 				break;
 			}
@@ -65,21 +59,16 @@ public:
 		ofClear(0);
 		current_framebuffer->end();
 		
-		if (passes.empty())
-		{
+        if (passes.empty()) {
 			render_pass(0);
 		}
-		else
-		{
-			for (int i = 0; i < passes.size(); i++)
-			{
+        else {
+            for (int i = 0; i < passes.size(); i++) {
 				Pass &pass = passes[i];
-				if (!pass.target.empty())
-				{
+                if (!pass.target.empty()) {
 					current_framebuffer = &framebuffer_map[pass.target];
 				}
-				else
-				{
+                else {
 					current_framebuffer = &framebuffer_map["DEFAULT"];
 				}
 				render_pass(i);
@@ -87,34 +76,29 @@ public:
 		}
 	}
 
-	void draw(float x, float y, float w, float h)
-	{
+    void draw(float x, float y, float w, float h) {
 		current_framebuffer->draw(x, y, w, h);
 	}
 	
-	void draw(float x, float y)
-	{
+    void draw(float x, float y) {
 		current_framebuffer->draw(x, y);
 	}
 	
 	//
 	
-	void clear(const ofColor& color)
-	{
+    void clear(const ofColor& color) {
 		current_framebuffer->begin();
 		ofClear(color);
 		current_framebuffer->end();
 	}
 	
-	void clear(float r, float g, float b, float a = 255)
-	{
+    void clear(float r, float g, float b, float a = 255) {
 		current_framebuffer->begin();
 		ofClear(r, g, b, a);
 		current_framebuffer->end();
 	}
 
-	void clear(float b, float a = 255)
-	{
+    void clear(float b, float a = 255) {
 		current_framebuffer->begin();
 		ofClear(b, a);
 		current_framebuffer->end();
@@ -122,17 +106,14 @@ public:
 
 	//
 	
-	ofTexture& getTextureReference()
-	{
+    ofTexture& getTextureReference() {
 		return *result_texture;
 	}
 	
 	//
 	
-	void setImage(ofTexture *img)
-	{
-		if (default_image_input_name == "")
-		{
+    void setImage(ofTexture *img) {
+        if (default_image_input_name == "") {
 			static bool shown = false;
 			if (!shown)
 			{
@@ -145,56 +126,47 @@ public:
 		uniforms.setUniform<ofTexture*>(default_image_input_name, img);
 	}
 	
-	void setImage(ofTexture &img)
-	{
+    void setImage(ofTexture &img) {
 		setImage(&img);
 	}
 	
-	void setImage(ofImage &img)
-	{
+    void setImage(ofImage &img) {
 		setImage(&img.getTextureReference());
 	}
 
 	//
 	
 	template <typename INT_TYPE, typename EXT_TYPE>
-	void setUniform(const string& name, const EXT_TYPE& value)
-	{
+    void setUniform(const string& name, const EXT_TYPE& value) {
 		uniforms.setUniform<INT_TYPE>(name, value);
 	}
 	
-	void setImage(const string& name, ofTexture *img)
-	{
+    void setImage(const string& name, ofTexture *img) {
 		uniforms.setUniform<ofTexture*>(name, img);
 	}
 
-	void setImage(const string& name, ofTexture &img)
-	{
+    void setImage(const string& name, ofTexture &img) {
 		setImage(name, &img);
 	}
 
-	void setImage(const string& name, ofImage &img)
-	{
+    void setImage(const string& name, ofImage &img) {
 		setImage(name, &img.getTextureReference());
 	}
 	
 	//
 	
 	template <typename T>
-	bool hasUniform(const string& name) const
-	{
+    bool hasUniform(const string& name) const {
 		if (!uniforms.hasUniform(name)) return false;
 		if (!uniforms.getUniform(name)->isTypeOf<T>()) return false;
 		return true;
 	}
 	
-	bool hasImage(const string& name) const
-	{
+    bool hasImage(const string& name) const {
 		return hasUniform<ofTexture*>(name);
 	}
 	
-	void dumpShader() const
-	{
+    void dumpShader() const {
 		code_generator.dumpShader();
 	}
 

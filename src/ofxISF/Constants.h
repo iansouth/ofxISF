@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ofMain.h"
+
 #define OFX_ISF_BEGIN_NAMESPACE namespace ofx { namespace ISF {
 #define OFX_ISF_END_NAMESPACE } }
 
