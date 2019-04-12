@@ -372,7 +372,13 @@ protected:
         passes.clear();
 
         ofLogVerbose("ofxISF") << "Parsing JSON:\n" << header_directive;
-        auto json = ofJson::parse(header_directive);
+        ofJson json;
+        try {
+            json = ofJson::parse(header_directive);
+        } catch(std::exception &err) {
+            ofLogError("ofxISF") << "Header failed to parse as JSON : " << err.what();
+            return false;
+        }
         if ( ! json.is_object() ) {
             ofLogError("ofxISF") << "Header is not a JSON object, can't parse!";
             return false;
