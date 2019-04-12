@@ -84,33 +84,39 @@ public:
 		current_framebuffer->draw(x, y);
 	}
 	
-	//
-	
-    void clear(const ofColor& color) {
-		current_framebuffer->begin();
-		ofClear(color);
-		current_framebuffer->end();
-	}
-	
-    void clear(float r, float g, float b, float a = 255) {
-		current_framebuffer->begin();
-		ofClear(r, g, b, a);
-		current_framebuffer->end();
-	}
+    const string& getName() const { return name; }
+    const string& getDescription() const { return description; }
+    const string& getCredit() const { return credit; }
 
-    void clear(float b, float a = 255) {
-		current_framebuffer->begin();
-		ofClear(b, a);
-		current_framebuffer->end();
-	}
+    const vector<string>& getCategories() const { return categories; }
 
-	//
-	
+    const Uniforms& getInputs() const { return input_uniforms; }
+
     ofTexture& getTextureReference() {
 		return *result_texture;
 	}
 	
-	//
+    //
+
+    void clear(const ofColor& color) {
+        current_framebuffer->begin();
+        ofClear(color);
+        current_framebuffer->end();
+    }
+
+    void clear(float r, float g, float b, float a = 255) {
+        current_framebuffer->begin();
+        ofClear(r, g, b, a);
+        current_framebuffer->end();
+    }
+
+    void clear(float b, float a = 255) {
+        current_framebuffer->begin();
+        ofClear(b, a);
+        current_framebuffer->end();
+    }
+
+    //
 	
     void setImage(ofTexture *img) {
         if (default_image_input_name == "") {
@@ -134,8 +140,6 @@ public:
 		setImage(&img.getTextureReference());
 	}
 
-	//
-	
 	template <typename INT_TYPE, typename EXT_TYPE>
     void setUniform(const string& name, const EXT_TYPE& value) {
 		uniforms.setUniform<INT_TYPE>(name, value);
@@ -152,8 +156,6 @@ public:
     void setImage(const string& name, ofImage &img) {
 		setImage(name, &img.getTextureReference());
 	}
-	
-	//
 	
 	template <typename T>
     bool hasUniform(const string& name) const {
@@ -184,15 +186,6 @@ public:
         code_generator.dumpShader();
 	}
 
-	const string& getName() const { return name; }
-	const string& getDescription() const { return description; }
-	const string& getCredit() const { return credit; }
-	const vector<string>& getCategories() const { return categories; }
-
-	const Uniforms& getInputs() const { return input_uniforms; }
-	
-	//
-	
 	const vector<ofTexture*>& getTextures() const { return textures; }
 	
 protected:
