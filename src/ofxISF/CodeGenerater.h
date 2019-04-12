@@ -248,58 +248,49 @@ protected:
             isf_source = expanded_source;
 		}
 
-        /*
 		{
+            string expanded_source = isf_source;
 			string pattern = "(IMG_PIXEL|IMG_NORM_PIXEL)\\s*\\(\\s*(.*?)\\s?,";
+            std::regex re(pattern);
+            std::sregex_iterator next(isf_source.begin(), isf_source.end(), re);
+            std::sregex_iterator end;
+            while (next != end) {
+                std::smatch m = *next;
+                // TODO: check size matches?
+				string found(m.str());
+                string lookup_name(m[1]);
+                string image_name(m[2]);
 
-			Poco::RegularExpression re(pattern, Poco::RegularExpression::RE_NEWLINE_ANY);
-			Poco::RegularExpression::Match m;
-			m.offset = 0;
-
-			while (0 != re.match(isf_source, m.offset, m))
-			{
-				string found(isf_source, m.offset, m.length);
-
-				string lookup_name = found;
-				re.subst(lookup_name, "$1");
-
-				string image_name = found;
-				re.subst(image_name, "$2");
-
+                // TODO: better to just look over images and regex replace?
 				map<string, ImageDecl>::iterator it = image_decls.find(image_name);
-				if (it == image_decls.end())
-				{
+				if (it == image_decls.end()) {
 					ofLogError("ofxISF::CodeGenerator") << "image name mismatch: " << image_name;
 					return false;
 				}
-
 				ImageDecl &image_decl = it->second;
-				string replace_string;
 
-				if (lookup_name == "IMG_PIXEL")
-				{
+				string replace_string;
+				if (lookup_name == "IMG_PIXEL") {
 					replace_string = image_decl.getImgPixlString();
 				}
-				else if (lookup_name == "IMG_NORM_PIXEL")
-				{
+				else if (lookup_name == "IMG_NORM_PIXEL") {
 					replace_string = image_decl.getImgNormPixelString();
 				}
-				else
-				{
+				else {
 					throw "unknown error";
 				}
 
-				isf_source.replace(m.offset, m.length, replace_string);
+                ofLogVerbose("ofxISF") << "replace:" << found << " with:" << replace_string;
+                ofStringReplace(expanded_source, found, replace_string);
 
-				m.offset += replace_string.size();
+                next++;
 			}
+            ofLogVerbose("ofxISF") << "=EXPANDED SOURCE" << endl << expanded_source << endl << "=END";
+            isf_source = expanded_source;
 		}
-        */
 		
 		return true;
 	}
 };
-
-#undef _S
 
 OFX_ISF_END_NAMESPACE
