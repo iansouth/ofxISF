@@ -32,7 +32,7 @@ ehthumbs.db
 
 # vs
 ipch/
-[Bb]in/
+#[Bb]in/
 [Oo]bj/
 *.aps
 *.ncb

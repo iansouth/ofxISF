@@ -362,10 +362,15 @@ protected:
 		return true;
 	}
 	
-	//
-	
 	bool parse(const string& header_directive)
 	{
+        description = "";
+        credit = "";
+        categories.clear();
+        input_uniforms.clear();
+        presistent_buffers.clear();
+        passes.clear();
+
         ofLogVerbose("ofxISF") << "Parsing JSON:\n" << header_directive;
         auto json = ofJson::parse(header_directive);
         if ( ! json.is_object() ) {
@@ -373,15 +378,13 @@ protected:
             return false;
         }
 
-		description = json["DESCRIPTION"];
-		credit = json["CREDIT"];
+        if (json.count("DESCRIPTION") == 1) description = json["DESCRIPTION"];
+        if (json.count("CREDIT") == 1)      credit = json["CREDIT"];
 
         if (json.count("CATEGORIES") == 1 && json["CATEGORIES"].is_array()) {
-			categories.clear();
             for (auto &el: json["CATEGORIES"]) categories.push_back(el);
         }
 
-        input_uniforms.clear();
         for (auto& el : json["INPUTS"]) {
             Uniform::Ref uniform = setup_input_uniform(el);
             if (uniform) {
@@ -395,7 +398,6 @@ protected:
             }
         }
 
-        presistent_buffers.clear();
         if ( json.count("PERSISTENT_BUFFERS") == 1 ) {
             if ( json["PERSISTENT_BUFFERS"].is_array() ) {
                 for ( auto & el : json["PERSISTENT_BUFFERS"] ) {
@@ -412,7 +414,6 @@ protected:
             }
         }
 
-        passes.clear();
 		if ( json.count("PASSES") == 1 && json["PASSES"].is_array() ) {
             for ( auto & pass : json["PASSES"] ) {
 				string target = pass["TARGET"];
