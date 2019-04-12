@@ -17,7 +17,9 @@ public:
 		
 		video.initGrabber(1280, 720);
 		
-		isf.setup(1280, 720, GL_RGB32F);
+		//GL_RGBA32F_ARB
+		//isf.setup(1280, 720, GL_RGB32F);
+		isf.setup(1280, 720, GL_RGBA);
 		isf.load("isf-test.fs");
 		//isf.load("isf-basic.fs");
         cout << "Name: " << isf.getName() << endl;;
@@ -56,9 +58,13 @@ public:
 
 	void keyPressed(int key)
 	{
-        if ( key == 'l' ) {
-		    isf.load("isf-basic.fs");
-        }
+	    if ( key == 'l' ) {
+		ofFileDialogResult result = ofSystemLoadDialog("Load file");
+		if(result.bSuccess) {
+		     string path = result.getPath();
+                     isf.load(path);
+		}
+            }
 	}
 
 	void keyReleased(int key)

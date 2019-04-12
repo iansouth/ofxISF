@@ -461,7 +461,10 @@ protected:
 		}
 		else if (type == "bool") {
             bool def = false;
-            if (hasDefault) def = json["DEFAULT"];
+            if (hasDefault) {
+                if ( json["DEFAULT"].is_boolean() ) def = json["DEFAULT"];
+                if ( json["DEFAULT"].is_number() )  int(json["DEFAULT"]) == 0 ? def = false : def = true;
+            }
 			uniform = new BoolUniform(name, def);
 		}
 		else if (type == "float") {
