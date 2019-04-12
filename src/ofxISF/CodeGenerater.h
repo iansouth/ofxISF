@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "Poco/RegularExpression.h"
 #include <regex>
 
 #include "Constants.h"
@@ -8,7 +7,83 @@
 
 OFX_ISF_BEGIN_NAMESPACE
 
-#define _S(src) # src
+static string VertShaderSrc = R"END(
+#version 120
+
+uniform int PASSINDEX;
+uniform vec2 RENDERSIZE;
+varying vec2 vv_FragNormCoord;
+
+void vv_vertShaderInit(void)
+{
+	gl_Position = ftransform();
+	vv_FragNormCoord = vec2(gl_MultiTexCoord0.x, gl_MultiTexCoord0.y);
+}
+
+$UNIFORMS$
+
+void main(void)
+{
+	vv_vertShaderInit();
+}
+)END";
+
+static string FragShaderSrc = R"END(
+#version 120
+
+
+// ISF Uniforms
+
+uniform int PASSINDEX;
+uniform vec2 RENDERSIZE;
+varying vec2 vv_FragNormCoord;
+uniform float TIME;
+
+$UNIFORMS$
+
+// ISF Texture (Image) functions
+
+vec4 IMG_NORM_PIXEL_2D(sampler2D sampler, vec2 pct, vec2 normLoc)
+{
+	vec2 coord = normLoc;
+	return texture2D(sampler, coord * pct);
+}
+vec4 IMG_PIXEL_2D(sampler2D sampler, vec2 pct, vec2 loc)
+{
+	return IMG_NORM_PIXEL_2D(sampler, pct, loc / RENDERSIZE);
+}
+vec4 IMG_THIS_NORM_PIXEL_2D(sampler2D sampler, vec2 pct)
+{
+	vec2 coord = vv_FragNormCoord;
+	return texture2D(sampler, coord * pct);
+}
+vec4 IMG_THIS_PIXEL_2D(sampler2D sampler, vec2 pct)
+{
+	return IMG_THIS_NORM_PIXEL_2D(sampler, pct);
+}
+vec4 IMG_NORM_PIXEL_RECT(sampler2DRect sampler, vec2 pct, vec2 normLoc)
+{
+	vec2 coord = normLoc;
+	return texture2DRect(sampler, coord * RENDERSIZE);
+}
+vec4 IMG_PIXEL_RECT(sampler2DRect sampler, vec2 pct, vec2 loc)
+{
+	return IMG_NORM_PIXEL_RECT(sampler, pct, loc / RENDERSIZE);
+}
+vec4 IMG_THIS_NORM_PIXEL_RECT(sampler2DRect sampler, vec2 pct)
+{
+	vec2 coord = vv_FragNormCoord;
+	return texture2DRect(sampler, coord * RENDERSIZE);
+}
+vec4 IMG_THIS_PIXEL_RECT(sampler2DRect sampler, vec2 pct)
+{
+	return IMG_THIS_NORM_PIXEL_RECT(sampler, pct);
+}
+
+// ISF Source
+
+$ISF_SOURCE$
+)END";
 
 class ImageDecl
 {
@@ -106,9 +181,7 @@ protected:
 	{
 		const vector<Ref_<ImageUniform> >& images = uniforms.getImageUniforms();
 		map<string, ImageDecl> image_decls;
-
-		for (int i = 0; i < images.size(); i++)
-		{
+		for (int i = 0; i < images.size(); i++) {
 			const Ref_<ImageUniform> &uniform = images[i];
 			image_decls[uniform->getName()] = ImageDecl(uniform);
 		}
@@ -117,87 +190,17 @@ protected:
 		if (!process_lookup_macro(isf_source, image_decls)) return false;
 
 		string uniform_str;
-		for (int i = 0; i < uniforms.size(); i++)
-		{
+		for (int i = 0; i < uniforms.size(); i++) {
 			Uniform::Ref o = uniforms.getUniform(i);
 			uniform_str += o->getUniform() + "\n";
 		}
 
-		{
-			vert = _S(
-				uniform int PASSINDEX;
-				uniform vec2 RENDERSIZE;
-				varying vec2 vv_FragNormCoord;
+		vert = VertShaderSrc;
+		ofStringReplace(vert, "$UNIFORMS$", uniform_str);
 
-				void vv_vertShaderInit(void)
-				{
-					gl_Position = ftransform();
-					vv_FragNormCoord = vec2(gl_MultiTexCoord0.x, gl_MultiTexCoord0.y);
-				}
-
-				$UNIFORMS$
-
-				void main(void)
-				{
-					vv_vertShaderInit();
-				}
-			);
-
-			ofStringReplace(vert, "$UNIFORMS$", uniform_str);
-		}
-
-		{
-			frag = _S(
-				uniform int PASSINDEX;
-				uniform vec2 RENDERSIZE;
-				varying vec2 vv_FragNormCoord;
-				uniform float TIME;
-
-				$UNIFORMS$
-
-				vec4 IMG_NORM_PIXEL_2D(sampler2D sampler, vec2 pct, vec2 normLoc)
-				{
-					vec2 coord = normLoc;
-					return texture2D(sampler, coord * pct);
-				}
-				vec4 IMG_PIXEL_2D(sampler2D sampler, vec2 pct, vec2 loc)
-				{
-					return IMG_NORM_PIXEL_2D(sampler, pct, loc / RENDERSIZE);
-				}
-				vec4 IMG_THIS_NORM_PIXEL_2D(sampler2D sampler, vec2 pct)
-				{
-					vec2 coord = vv_FragNormCoord;
-					return texture2D(sampler, coord * pct);
-				}
-				vec4 IMG_THIS_PIXEL_2D(sampler2D sampler, vec2 pct)
-				{
-					return IMG_THIS_NORM_PIXEL_2D(sampler, pct);
-				}
-				vec4 IMG_NORM_PIXEL_RECT(sampler2DRect sampler, vec2 pct, vec2 normLoc)
-				{
-					vec2 coord = normLoc;
-					return texture2DRect(sampler, coord * RENDERSIZE);
-				}
-				vec4 IMG_PIXEL_RECT(sampler2DRect sampler, vec2 pct, vec2 loc)
-				{
-					return IMG_NORM_PIXEL_RECT(sampler, pct, loc / RENDERSIZE);
-				}
-				vec4 IMG_THIS_NORM_PIXEL_RECT(sampler2DRect sampler, vec2 pct)
-				{
-					vec2 coord = vv_FragNormCoord;
-					return texture2DRect(sampler, coord * RENDERSIZE);
-				}
-				vec4 IMG_THIS_PIXEL_RECT(sampler2DRect sampler, vec2 pct)
-				{
-					return IMG_THIS_NORM_PIXEL_RECT(sampler, pct);
-				}
-
-				$ISF_SOURCE$
-			);
-
-			ofStringReplace(frag, "$UNIFORMS$", uniform_str);
-			ofStringReplace(frag, "$ISF_SOURCE$", isf_source);
-		}
+		frag = FragShaderSrc;
+		ofStringReplace(frag, "$UNIFORMS$", uniform_str);
+		ofStringReplace(frag, "$ISF_SOURCE$", isf_source);
 
 		return true;
 	}
@@ -212,11 +215,7 @@ protected:
             std::sregex_iterator end;
             while (next != end) {
                 std::smatch m = *next;
-                std::cout << "M: " << m.str() << " - ";
-                for (auto x:m) std::cout << "m:" << x << " ";
-                std::cout << "\n";
                 // TODO: check size matches?
-
 				string found(m.str());
                 string lookup_name(m[1]);
                 string image_name(m[2]);
@@ -240,12 +239,12 @@ protected:
 					throw "unknown error";
 				}
 
-                cout << "replace:" << found << " with:" << replace_string << endl;
+                ofLogVerbose("ofxISF") << "replace:" << found << " with:" << replace_string;
                 ofStringReplace(expanded_source, found, replace_string);
 
                 next++;
 			}
-            cout << "EXPANDED SOURCE" << endl << expanded_source << endl << "=end" << endl;
+            ofLogVerbose("ofxISF") << "=EXPANDED SOURCE" << endl << expanded_source << endl << "=END";
             isf_source = expanded_source;
 		}
 

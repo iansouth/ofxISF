@@ -384,7 +384,7 @@ protected:
 	
 	bool parse(const string& header_directive)
 	{
-        ofLogNotice("HELLO") << "Parsing JSON:\n" << header_directive;
+        ofLogVerbose("ofxISF") << "Parsing JSON:\n" << header_directive;
         auto json = ofJson::parse(header_directive);
         if ( ! json.is_object() ) {
             ofLogError("ofxISF") << "Header is not a JSON object, can't parse!";

@@ -20,8 +20,12 @@ public:
 		//GL_RGBA32F_ARB
 		//isf.setup(1280, 720, GL_RGB32F);
 		isf.setup(1280, 720, GL_RGBA);
-		isf.load("isf-test.fs");
-		//isf.load("isf-basic.fs");
+		loadISF("isf-test.fs");
+	}
+
+	bool loadISF(const string & path) {
+		if ( ! isf.load(path) ) return false;
+
         cout << "Name: " << isf.getName() << endl;;
         cout << "Description: " << isf.getDescription() << endl;;
         cout << "Credit: " << isf.getCredit() << endl;;
@@ -35,10 +39,10 @@ public:
             auto uni = uniforms.getUniform(i);
             cout << "Uniform: " << uni->getName() << " type:" << uni->getTypeID() << endl;
         }
-        cout << "SHADER" << endl;
-        isf.dumpShader();
 		
 		isf.setImage("inputImage", video.getTextureReference());
+
+		return true;
 	}
 	
 	void update()
@@ -59,12 +63,16 @@ public:
 	void keyPressed(int key)
 	{
 	    if ( key == 'l' ) {
-		ofFileDialogResult result = ofSystemLoadDialog("Load file");
-		if(result.bSuccess) {
-		     string path = result.getPath();
-                     isf.load(path);
+			ofFileDialogResult result = ofSystemLoadDialog("Load file");
+			if(result.bSuccess) {
+				 string path = result.getPath();
+				 loadISF(path);
+			}
+        }
+		else if ( key == 'd' ) {
+			cout << "SHADER" << endl;
+			isf.dumpShader();
 		}
-            }
 	}
 
 	void keyReleased(int key)
