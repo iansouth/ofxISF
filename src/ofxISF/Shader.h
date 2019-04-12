@@ -490,6 +490,18 @@ protected:
             }
             uniform = o;
         }
+        else if (type == "long") {
+            int def = 0;
+            if (hasDefault) def = json["DEFAULT"];
+            auto *o = new LongUniform(name, def);
+            if ( json.count("LABELS") == 1 && json["LABELS"].is_array()
+                 && json.count("VALUES") == 1 && json["VALUES"].is_array() ) {
+                for ( size_t i = 0; i < json["LABELS"].size(); ++i ) {
+                    o->pushValue(json["VALUES"][i], json["LABELS"][i]);
+                }
+            }
+            uniform = o;
+        }
 
         return uniform;
     }

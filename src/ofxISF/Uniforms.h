@@ -151,7 +151,7 @@ public:
 		max = max_;
         parameter.setMin(min_);
         parameter.setMax(max_);
-	}
+    }
 
 	template <typename TT>
     void set(const TT& v) {
@@ -354,6 +354,36 @@ protected:
 	}
 };
 
+/* long type in ISF is used for mode settings, select type lists
+ */
+class LongUniform : public Uniform_<int> {
+public:
+
+    LongUniform(const string& name, const int& default_value = Type()) : Uniform_(name, default_value) {
+        setRange(0, 0);
+    }
+
+    void update(ofShader *shader) {
+        if (has_range) value = ofClamp(value, min, max);
+        shader->setUniform1i(name, value);
+    }
+
+    vector<int>    values;
+    vector<string> labels;
+    void pushValue(const int& value, const string & label) {
+        values.push_back(value);
+        labels.push_back(label);
+        setRange(0, values.size()-1);
+    }
+
+protected:
+
+    string getUniform() const {
+        string s = "uniform int $NAME$;";
+        ofStringReplace(s, "$NAME$", getName());
+        return s;
+    }
+};
 //
 
 template <typename INT_TYPE, typename EXT_TYPE>
