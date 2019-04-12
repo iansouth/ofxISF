@@ -259,8 +259,6 @@ protected:
 		current_framebuffer->end();
 	}
 
-#pragma mark -
-	
 	bool parse_directive(const string &data, string& header_directive, string& shader_directive)
 	{
 		const string header_begin = "/*";

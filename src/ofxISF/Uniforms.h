@@ -29,6 +29,8 @@ public:
 	
 	size_t getTypeID() const { return type_id; }
 
+    virtual ofAbstractParameter& getParameter() = 0;
+
 protected:
 
 	friend class CodeGenerator;
@@ -46,40 +48,45 @@ protected:
 class Uniforms
 {
 public:
+    ofParameterGroup parameters;
+
+    Uniforms() {
+        parameters.setName("Uniforms");
+    }
+
+    ofParameterGroup & getParams() {
+        return parameters;
+    }
 
 	size_t size() const
 	{
 		return uniforms.size();
 	}
 	
-	Uniform::Ref getUniform(size_t idx) const
-	{
+    Uniform::Ref getUniform(size_t idx) const {
 		return uniforms.at(idx);
 	}
 	
-	Uniform::Ref getUniform(const string& key) const
-	{
+    Uniform::Ref getUniform(const string& key) const {
 		if (uniforms_map.find(key) == uniforms_map.end()) return Uniform::Ref();
 		return uniforms_map[key];
 	}
 	
-	bool hasUniform(const string& key) const
-	{
+    bool hasUniform(const string& key) const {
 		return uniforms_map.find(key) != uniforms_map.end();
 	}
 
-	const vector<Ref_<ImageUniform> >& getImageUniforms() const
-	{
+    const vector<Ref_<ImageUniform> >& getImageUniforms() const {
 		return image_uniforms;
 	}
 
 public:
 	
-	bool addUniform(const string& key, Uniform::Ref uniform)
-	{
+    bool addUniform(const string& key, Uniform::Ref uniform) {
 		if (hasUniform(key)) return false;
 
 		uniforms_map[key] = uniform;
+        parameters.add(uniform->getParameter());
 		updateCache();
 		return true;
 	}
@@ -95,11 +102,11 @@ public:
 	template <typename T0, typename T1>
 	void setUniform(const string& name, const T1& value);
 
-	void clear()
-	{
+    void clear() {
 		uniforms.clear();
 		uniforms_map.clear();
 		image_uniforms.clear();
+        parameters.clear();
 	}
 
 protected:
@@ -120,28 +127,40 @@ public:
 
 	typedef T Type;
 
+    ofParameter<T> parameter;
 	T value;
 	T min, max;
 	bool has_range;
 
-	Uniform_(const string& name, const T& default_value = T()) : Uniform(name, Type2Int<T>::value()), value(default_value), has_range(false) {}
+    Uniform_(const string& name, const T& default_value = T()) : Uniform(name, Type2Int<T>::value()), value(default_value), has_range(false) {
+        parameter.set(name, default_value);
+        parameter.addListener(this, &Uniform_::onParameterChange);
+    }
 
-	void setRange(const T& min_, const T& max_)
-	{
+    ofAbstractParameter& getParameter() {
+        return parameter;
+    }
+
+    void onParameterChange(T & _v) {
+        value = _v;
+    }
+
+    void setRange(const T& min_, const T& max_) {
 		has_range = true;
 		min = min_;
 		max = max_;
+        parameter.setMin(min_);
+        parameter.setMax(max_);
 	}
 
 	template <typename TT>
-	void set(const TT& v)
-	{
+    void set(const TT& v) {
 		value = v;
+        parameter = v;
 	}
 
 	template <typename TT>
-	TT get() const
-	{
+    TT get() const {
 		TT v = value;
 		return v;
 	}

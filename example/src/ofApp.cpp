@@ -1,5 +1,6 @@
 #include "ofMain.h"
 #include "ofxISF.h"
+#include "ofxGui.h"
 
 class ofApp : public ofBaseApp
 {
@@ -8,12 +9,16 @@ public:
     ofxISF::Shader isf;
     ofVideoGrabber video;
 
+    ofxPanel         gui;
+
     void setup() {
         ofSetFrameRate(60);
         ofSetVerticalSync(true);
         ofBackground(0);
 
         video.initGrabber(1280, 720);
+
+        gui.setup("panel"); // most of the time you don't need a name but don't forget to call setup
 
         //GL_RGBA32F_ARB
         //isf.setup(1280, 720, GL_RGB32F);
@@ -38,7 +43,14 @@ public:
             cout << "Uniform: " << uni->getName() << " type:" << uni->getTypeID() << endl;
         }
 
+        cout << "Params :)" << endl;
+        cout << uniforms.getParams() << endl;
+
         isf.setImage("inputImage", video.getTextureReference());
+
+        auto params = uniforms.getParams();
+        gui.clear();
+        gui.add(params);
 
         return true;
     }
@@ -46,14 +58,15 @@ public:
     void update() {
         video.update();
 
-        float t = ofGetElapsedTimef() * 2;
-        isf.setUniform<float>("blurAmount", ofNoise(1, 0, 0, t) * 1.5);
+        //float t = ofGetElapsedTimef() * 2;
+        //isf.setUniform<float>("blurAmount", ofNoise(1, 0, 0, t) * 1.5);
 
         isf.update();
     }
 
     void draw() {
         isf.draw(0, 0);
+        gui.draw();
     }
 
     void keyPressed(int key) {
