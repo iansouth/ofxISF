@@ -54,7 +54,7 @@ public:
         parameters.setName("Uniforms");
     }
 
-    ofParameterGroup & getParams() {
+    ofParameterGroup getParams() {
         return parameters;
     }
 

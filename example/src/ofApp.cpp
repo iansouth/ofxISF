@@ -9,7 +9,11 @@ public:
     ofxISF::Shader isf;
     ofVideoGrabber video;
 
-    ofxPanel         gui;
+    ofxPanel            gui;
+    ofParameter<bool>   bGuiVisible{"GUI Visible", true};
+    ofParameter<string> guiName{"Name", ""};
+    ofxButton           guiLoadBtn;
+    ofxGuiGroup         guiInputs;
 
     void setup() {
         ofSetFrameRate(60);
@@ -18,17 +22,35 @@ public:
 
         video.initGrabber(1280, 720);
 
-        gui.setup("panel"); // most of the time you don't need a name but don't forget to call setup
+        setupGui();
 
-        //GL_RGBA32F_ARB
         //isf.setup(1280, 720, GL_RGB32F);
         isf.setup(1280, 720, GL_RGBA);
         loadISF("isf-test.fs");
     }
 
+    void setupGui() {
+        gui.setup("ofxISF");
+        gui.add(guiName);
+        gui.add( guiLoadBtn.setup("Load shader...") );
+        gui.add(bGuiVisible);
+        guiLoadBtn.addListener(this, &ofApp::loadDialog);
+        gui.add(guiInputs.setup("Inputs"));
+    }
+
+    void loadDialog() {
+        ofFileDialogResult result = ofSystemLoadDialog("Load ISF shader .fs file");
+        if(result.bSuccess) {
+            string path = result.getPath();
+            loadISF(path);
+        }
+    }
+
     bool loadISF(const string & path) {
         if ( ! isf.load(path) ) return false;
 
+        guiName = isf.getName();
+        ofSetWindowTitle(isf.getName());
         cout << "Name: " << isf.getName() << endl;;
         cout << "Description: " << isf.getDescription() << endl;;
         cout << "Credit: " << isf.getCredit() << endl;;
@@ -49,8 +71,8 @@ public:
         isf.setImage("inputImage", video.getTextureReference());
 
         auto params = uniforms.getParams();
-        gui.clear();
-        gui.add(params);
+        guiInputs.clear();
+        guiInputs.add(params);
 
         return true;
     }
@@ -66,25 +88,17 @@ public:
 
     void draw() {
         isf.draw(0, 0);
-        gui.draw();
+        if (bGuiVisible == true) gui.draw();
     }
 
     void keyPressed(int key) {
-        if ( key == 'l' ) {
-            ofFileDialogResult result = ofSystemLoadDialog("Load file");
-            if(result.bSuccess) {
-                string path = result.getPath();
-                loadISF(path);
-            }
-        }
-        else if ( key == 'd' ) {
-            cout << "SHADER" << endl;
-            isf.dumpShader();
-        }
+        if ( key == OF_KEY_TAB ) { bGuiVisible = !bGuiVisible.get(); }
+        else if ( key == 'l' )   { loadDialog(); }
+        else if ( key == 'd' )   { isf.dumpShader(); }
+        else if ( key == 'F' )   { ofToggleFullscreen(); }
     }
 
     void keyReleased(int key) {
-
     }
 
     void mouseMoved(int x, int y) {
