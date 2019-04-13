@@ -61,6 +61,14 @@ public:
         auto params = uniforms.getParams();
         guiInputs.clear();
         guiInputs.add(params);
+        ofParameterGroup imagesGrp{"images"};
+        auto images = uniforms.getImageUniforms();
+        for (auto & uimg : images) {
+            //auto p = uimg->getParameter();
+            ofParameter<string> texp{uimg->getName(), ""};
+            imagesGrp.add(texp);
+        }
+        guiInputs.add(imagesGrp);
 
         isf.setImage("inputImage", video.getTextureReference());
 
