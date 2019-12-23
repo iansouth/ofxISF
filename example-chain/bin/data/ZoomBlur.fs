@@ -37,8 +37,6 @@
 	"PASSES": [
 		{
 			"TARGET":"accum"
-		},
-		{
 		}
 	]
 }*/

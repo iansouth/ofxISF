@@ -302,7 +302,6 @@ protected:
 		{
 			const PresistentBuffer &buf = presistent_buffers[i];
 			ofFbo &fbo = framebuffer_map[buf.name];
-			textures.push_back(&fbo.getTextureReference());
 			
 			if (!fbo.isAllocated())
 			{
@@ -312,7 +311,9 @@ protected:
 				ofClear(0);
 				fbo.end();
 			}
-			
+
+			textures.push_back(&fbo.getTextureReference());
+
 			ImageUniform *uniform = new ImageUniform(buf.name);
 			uniform->set(&fbo.getTextureReference());
 			uniforms.addUniform(buf.name, Uniform::Ref(uniform));
