@@ -42,6 +42,12 @@ public:
 		return true;
 	}
 
+	bool load(const string& header, const string& shader) {
+		header_directive = header;
+		shader_directive = shader;
+		return reload_shader();
+	}
+
     void update() {
 		const vector<Ref_<ImageUniform> >& images = uniforms.getImageUniforms();
 		bool need_reload_shader = false;
