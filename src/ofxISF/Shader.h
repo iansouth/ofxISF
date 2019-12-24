@@ -51,7 +51,7 @@ public:
     void update() {
 		const vector<Ref_<ImageUniform> >& images = uniforms.getImageUniforms();
 		bool need_reload_shader = false;
-		for (int i = 0; i < images.size(); i++)
+		for (size_t i = 0; i < images.size(); i++)
 		{
             if (images[i]->checkTextureFormatChanged()) {
 				need_reload_shader = true;
@@ -69,7 +69,7 @@ public:
 			render_pass(0);
 		}
         else {
-            for (int i = 0; i < passes.size(); i++) {
+            for (size_t i = 0; i < passes.size(); i++) {
 				Pass &pass = passes[i];
                 if (!pass.target.empty()) {
 					current_framebuffer = &framebuffer_map[pass.target];
@@ -143,7 +143,7 @@ public:
 	}
 	
     void setImage(ofImage &img) {
-		setImage(&img.getTextureReference());
+		setImage(&img.getTexture());
 	}
 
 	template <typename INT_TYPE, typename EXT_TYPE>
@@ -160,7 +160,7 @@ public:
 	}
 
     void setImage(const string& name, ofImage &img) {
-		setImage(name, &img.getTextureReference());
+		setImage(name, &img.getTexture());
 	}
 	
 	template <typename T>
@@ -246,7 +246,7 @@ protected:
 		
 		ImageUniform::resetTextureUnitID();
 		
-		for (int i = 0; i < uniforms.size(); i++)
+		for (size_t i = 0; i < uniforms.size(); i++)
 			uniforms.getUniform(i)->update(&shader);
 		
 		glBegin(GL_QUADS);
@@ -300,11 +300,11 @@ protected:
 		textures.clear();
 		current_framebuffer = &framebuffer_map["DEFAULT"];
 		
-		textures.push_back(&framebuffer_map["DEFAULT"].getTextureReference());
+		textures.push_back(&framebuffer_map["DEFAULT"].getTexture());
 		
 		if (!parse(header_directive)) return false;
 		
-		for (int i = 0; i < presistent_buffers.size(); i++)
+		for (size_t i = 0; i < presistent_buffers.size(); i++)
 		{
 			const PresistentBuffer &buf = presistent_buffers[i];
 			ofFbo &fbo = framebuffer_map[buf.name];
@@ -318,10 +318,10 @@ protected:
 				fbo.end();
 			}
 
-			textures.push_back(&fbo.getTextureReference());
+			textures.push_back(&fbo.getTexture());
 
 			ImageUniform *uniform = new ImageUniform(buf.name);
-			uniform->set(&fbo.getTextureReference());
+			uniform->set(&fbo.getTexture());
 			uniforms.addUniform(buf.name, Uniform::Ref(uniform));
 		}
 		
@@ -336,7 +336,7 @@ protected:
 			if (result_texture_name == "")
 				result_texture_name = "DEFAULT";
 			
-			result_texture = &framebuffer_map[result_texture_name].getTextureReference();
+			result_texture = &framebuffer_map[result_texture_name].getTexture();
 		}
 		
 		if (!code_generator.generate(shader_directive)) return false;

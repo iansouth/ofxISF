@@ -181,7 +181,7 @@ protected:
 	{
 		const vector<Ref_<ImageUniform> >& images = uniforms.getImageUniforms();
 		map<string, ImageDecl> image_decls;
-		for (int i = 0; i < images.size(); i++) {
+		for (size_t i = 0; i < images.size(); i++) {
 			const Ref_<ImageUniform> &uniform = images[i];
 			image_decls[uniform->getName()] = ImageDecl(uniform);
 		}
@@ -190,7 +190,7 @@ protected:
 		if (!process_lookup_macro(isf_source, image_decls)) return false;
 
 		string uniform_str;
-		for (int i = 0; i < uniforms.size(); i++) {
+		for (size_t i = 0; i < uniforms.size(); i++) {
 			Uniform::Ref o = uniforms.getUniform(i);
 			uniform_str += o->getUniform() + "\n";
 		}

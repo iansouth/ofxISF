@@ -11,7 +11,7 @@ public:
 	Chain() : input(NULL), result(NULL) {}
 	~Chain()
 	{
-		for (int i = 0; i < passes.size(); i++)
+		for (size_t i = 0; i < passes.size(); i++)
 		{
 			delete passes[i];
 		}
@@ -54,7 +54,7 @@ public:
 		
 		ofTexture *tex = input;
 		
-		for (int i = 0; i < passes.size(); i++)
+		for (size_t i = 0; i < passes.size(); i++)
 		{
 			ShaderPass &p = *passes[i];
 			if (p.enabled == false) continue;
@@ -80,7 +80,7 @@ public:
 	
 	inline void setImage(ofTexture *img) { input = img; }
 	inline void setImage(ofTexture &img) { setImage(&img); }
-	inline void setImage(ofImage &img) { setImage(img.getTextureReference()); }
+	inline void setImage(ofImage &img) { setImage(img.getTexture()); }
 	
 	inline float getWidth() const { return width; }
 	inline float getHeight() const { return height; }
@@ -115,7 +115,7 @@ public:
 	bool toggle(const string& name)
 	{
 		if (!hasShader(name)) return false;;
-		pass_map[name]->enabled != pass_map[name]->enabled;
+		pass_map[name]->enabled = !pass_map[name]->enabled;
         return true;
 	}
 
